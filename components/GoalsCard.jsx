@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 
-const GoalsCard = () => {
+const GoalsCard = ({phone}) => {
   const [goalsData, setGoalsData] = useState(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     // جلب بيانات الأهداف من الـ API مباشرة داخل الكومبوننت
-    fetch('http://192.168.1.5:3000/api/gl',{
+    fetch(`http://192.168.1.5:3000/api/gl?phone=${phone}`,{
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -15,7 +14,6 @@ const GoalsCard = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log('تم جلب بيانات الأهداف بنجاح:', data);
         setGoalsData(data);
         setLoading(false);
       })
@@ -26,7 +24,22 @@ const GoalsCard = () => {
   }, []);
 
   const handleAction = (actionName) => {
-    console.log(`Action triggered: ${actionName}`);
+    setLoading(true)
+    fetch(`http://192.168.1.5:3000/api/gl?phone=${phone}`,{
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setGoalsData(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching goals data:', error);
+        setLoading(false);
+      });
   };
 
   if (loading) {

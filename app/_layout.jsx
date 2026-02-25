@@ -17,7 +17,7 @@ export default function RootLayout() {
           console.log('تم جلب التوكين بنجاح:', token);
           
           // إرسال المفتاح للسيرفر تلقائياً
-          const response = await fetch(`https://db.utq.org.sa/savekey?key=${token}`,{
+          const response = await fetch(`http://192.168.1.5:3000/api/savekey/${token}`,{
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',

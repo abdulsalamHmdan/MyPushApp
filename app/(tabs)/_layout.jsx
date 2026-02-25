@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView, ActivityIndicator, Text } from 'react-native';
 import ShareCard from '../../components/ShareCard'; // سننشئ هذا الملف الآن
 import GoalsCard from '../../components/GoalsCard'; // سننشئ هذا الملف الآن
+import RankCard from '../../components/RankCard'; // سننشئ هذا الملف الآن
+import BoxCard from '../../components/BoxCard'; // سننشئ هذا الملف الآن
 
 export default function HomeScreen() {
 
 
   useEffect(() => {
     // جلب بيانات بطاقة المشاركة من الـ API
-    
+
   }, []);
 
   // if (loading) {
@@ -22,15 +24,22 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.welcomeText}>مرحباً</Text>
-      
+
       {/* عرض بطاقة المشاركة إذا توفرت البيانات */}
-      
-        <ShareCard  
-        />
-        <GoalsCard  
-        />
-      
-      
+
+      <ShareCard
+      />
+      <GoalsCard
+        phone={554019111}
+      />
+      <RankCard
+        id={"6997bddc08604665a15cdec4"}
+      />
+      <BoxCard
+        id={"6997bddc08604665a15cdec4"}
+      />
+
+
       {/* يمكنك إضافة بطاقات أخرى هنا مستقبلاً */}
     </ScrollView>
   );

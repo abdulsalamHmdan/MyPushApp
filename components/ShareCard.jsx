@@ -1,84 +1,102 @@
-import React, { use, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Share, Clipboard } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import * as Sharing from 'expo-sharing';
+// import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Clipboard from 'expo-clipboard';
 
 const ShareCard = () => {
-      const [shareData, setShareData] = useState(null);
-      const [loading, setLoading] = useState(true);
-    useEffect(() => {
-        // fetch('https://db.utq.org.sa/api/share')
-        fetch('http://192.168.1.5:3000/api/share', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+  const [shareData, setShareData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://192.168.1.5:3000/api/share',{
+        method: 'GET',
+        headers: {  'Content-Type': 'application/json' },
+    } )
       .then((response) => response.json())
       .then((data) => {
         setShareData(data);
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching share data:', error);
+        console.error('Error:', error);
         setLoading(false);
       });
-    },[])
-  
+  }, []);
+
+  // الدالة السحرية لمشاركة الصورة مع النص
   const onShare = async () => {
+    if (!shareData) return;
+
     try {
-      await Share.share({
-        message: `${shareData?.message}`,
+      // 1. تحديد مسار مؤقت للصورة في ذاكرة الهاتف
+      const localUri = FileSystem.cacheDirectory + 'temp_share_image.png';
+
+      // 2. تحميل الصورة من الرابط إلى الذاكرة المحلية
+      const downloadResult = await FileSystem.downloadAsync(shareData.image, localUri);
+
+      // 3. التحقق من إمكانية المشاركة على الجهاز
+      if (!(await Sharing.isAvailableAsync())) {
+        alert('المشاركة غير متاحة على هذا الجهاز');
+        return;
+      }
+
+      // 4. تنفيذ عملية المشاركة
+      // ملاحظة: في iOS سيظهر النص والصورة معاً، في أندرويد يتم مشاركة الملف
+      // ويفضل نسخ النص للمجلد (Clipboard) احتياطاً للمستخدم
+      await Sharing.shareAsync(downloadResult.uri, {
+        dialogTitle: 'مشاركة الرسالة',
+        mimeType: 'image/png',
       });
+
     } catch (error) {
-      console.error(error);
+      console.error('Share Error:', error);
+      alert('حدث خطأ أثناء محاولة المشاركة');
     }
   };
 
-  const copyLink = () => {
-    Clipboard.setString(shareData?.link);
-    alert('تم نسخ الرابط!');
+  const copyToClipboard = async (text) => {
+    await Clipboard.setStringAsync(text);
+    alert('تم نسخ النص!');
   };
+
+  if (loading) return <ActivityIndicator size="small" color="#70655e" />;
+  if (!shareData) return null;
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>رسالة النشر</Text>
-        <Text style={styles.headerSub}>انسخ/شارك الرسالة مع صورة جاهزة</Text>
+        <Text style={styles.headerSub}>شارك الصورة مع النص الجاهز</Text>
       </View>
 
-      <Image source={{ uri: shareData?.image }} style={styles.mainImage} resizeMode="cover" />
-
-      <View style={styles.linkSection}>
-        <Text style={styles.linkText} numberOfLines={1}>{shareData?.link}</Text>
-        <TouchableOpacity style={styles.copyBtn} onPress={copyLink}>
-          <Text style={styles.copyBtnText}>نسخ</Text>
-        </TouchableOpacity>
-      </View>
+      <Image source={{ uri: shareData.image }} style={styles.mainImage} />
 
       <View style={styles.messageBox}>
-        <Text style={styles.messageText}>{shareData?.message}</Text>
+        <Text style={styles.messageText}>{shareData.message}</Text>
       </View>
 
       <TouchableOpacity style={styles.shareBtn} onPress={onShare}>
-        <Text style={styles.shareBtnText}>مشاركة</Text>
+        <Text style={styles.shareBtnText}>مشاركة الصورة</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.copyMsgBtn} onPress={() => { Clipboard.setString(shareData?.message); alert('تم نسخ النص!'); }}>
-        <Text style={styles.copyMsgBtnText}>نسخ الرسالة</Text>
+      <TouchableOpacity 
+        style={styles.copyMsgBtn} 
+        onPress={() => copyToClipboard(shareData.message)}
+      >
+        <Text style={styles.copyMsgBtnText}>نسخ نص الرسالة</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 20, width: '100%', padding: 15, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
+  card: { backgroundColor: '#fff', borderRadius: 20, width: '100%', padding: 15, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, marginTop: 10 },
   header: { marginBottom: 15, alignItems: 'flex-end' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   headerSub: { fontSize: 12, color: '#888' },
   mainImage: { width: '100%', height: 200, borderRadius: 15, marginBottom: 15 },
-  linkSection: { flexDirection: 'row-reverse', backgroundColor: '#f9f9f9', padding: 8, borderRadius: 10, alignItems: 'center', marginBottom: 15, borderWidth: 1, borderColor: '#eee' },
-  linkText: { flex: 1, textAlign: 'right', fontSize: 12, color: '#555', paddingHorizontal: 10 },
-  copyBtn: { paddingHorizontal: 15, paddingVertical: 5, backgroundColor: '#fff', borderRadius: 5, borderWidth: 1, borderColor: '#ddd' },
-  copyBtnText: { fontSize: 12, color: '#333' },
   messageBox: { backgroundColor: '#fcfcfc', padding: 15, borderRadius: 15, marginBottom: 20, borderStyle: 'dashed', borderWidth: 1, borderColor: '#eee' },
   messageText: { textAlign: 'right', fontSize: 13, color: '#666', lineHeight: 20 },
   shareBtn: { backgroundColor: '#70655e', padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 10 },
