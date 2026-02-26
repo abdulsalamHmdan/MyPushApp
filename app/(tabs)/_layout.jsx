@@ -1,53 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, ActivityIndicator, Text } from 'react-native';
-import ShareCard from '../../components/ShareCard'; // سننشئ هذا الملف الآن
-import GoalsCard from '../../components/GoalsCard'; // سننشئ هذا الملف الآن
-import RankCard from '../../components/RankCard'; // سننشئ هذا الملف الآن
-import BoxCard from '../../components/BoxCard'; // سننشئ هذا الملف الآن
+import { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import Storage from 'expo-native-storage';
 
-export default function HomeScreen() {
-
+export default function RootLayout() {
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
-    // جلب بيانات بطاقة المشاركة من الـ API
+    const username = Storage.getItemSync('usernames');
+    
+    // هل المستخدم حالياً داخل صفحات الـ (auth) مثل login؟
+    const inAuthGroup = segments[0] === '(auth)';
 
-  }, []);
-
-  // if (loading) {
-  //   return (
-  //     <View style={styles.center}>
-  //       <ActivityIndicator size="large" color="#70655e" />
-  //     </View>
-  //   );
-  // }
+    if (!username && !inAuthGroup) {
+      // إذا لم يسجل دخول وهو ليس في صفحة اللوجن، اطرده هناك
+      router.replace('/login');
+    } else if (username && inAuthGroup) {
+      // إذا مسجل دخول ويحاول فتح اللوجن، وجهه للرئيسية
+      router.replace('/home');
+    }
+  }, [segments]); // يراقب المسار الحالي باستمرار
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.welcomeText}>مرحباً</Text>
-
-      {/* عرض بطاقة المشاركة إذا توفرت البيانات */}
-
-      <ShareCard
-      />
-      <GoalsCard
-        phone={554019111}
-      />
-      <RankCard
-        id={"6997bddc08604665a15cdec4"}
-      />
-      <BoxCard
-        id={"6997bddc08604665a15cdec4"}
-      />
-
-
-      {/* يمكنك إضافة بطاقات أخرى هنا مستقبلاً */}
-    </ScrollView>
+    <Stack>
+      {/* <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} /> */}
+      {/* <Stack.Screen name="(tabs)/login" options={{ title: 'تسجيل الدخول' }} /> */}
+      <Stack.Screen name="(tabs)/home" options={{ title: 'الرئيسية' }} />
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
-  content: { padding: 20, alignItems: 'center' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  welcomeText: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' },
-});

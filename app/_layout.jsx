@@ -38,7 +38,9 @@ export default function RootLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)/login" options={{ title: 'تسجيل الدخول' }} />
+      <Stack.Screen name="(tabs)/home" options={{ title: 'الرئيسية' }} />
+      {/* <Stack.Screen name="(tabs)" options={{ headerShown:false }} /> */}
     </Stack>
   );
 }
